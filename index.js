@@ -45,6 +45,19 @@ async function run() {
             res.send(books);
         });
 
+        app.post('/book', async (req, res)=>{
+            const book = req.body;
+            const result = await booksCollection.insertOne(book);
+            res.send(result)
+        })
+
+        app.delete('/book/:id', verifyJWT, async (req, res)=>{
+            const id = req.params.id;
+            const query = {_id : ObjectId(id)}
+            const result = await booksCollection.deleteOne(query);
+            res.send(result)
+        })
+
         app.get('/book/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) }
@@ -63,7 +76,12 @@ async function run() {
             const userEmail = req.query.userEmail;
             const query = { userEmail: userEmail };
             const borrowBooks = await borrowCollection.find(query).toArray();
-            return res.send(borrowBooks);
+            res.send(borrowBooks);
+        })
+
+        app.get('/issue', verifyJWT, async (req, res)=>{
+            const books = await borrowCollection.find().toArray();
+            res.send(books);
         })
 
         app.get('/user', verifyJWT, async (req, res) => {
@@ -71,10 +89,16 @@ async function run() {
             res.send(users);
         });
 
+        app.delete('/user/:email', async (req, res)=>{
+            const email = req.params.email;
+            const deleteUser = await usersCollection.deleteOne({email: email})
+            res.send(deleteUser);
+        })
+
         app.get('/admin/:email', async (req, res)=>{
             const email = req.params.email;
             const user = await usersCollection.findOne({email: email});
-            const isAdmin = user.role=== 'admin';
+            const isAdmin = user?.role=== 'admin';
             res.send({admin: isAdmin})
         })
 
